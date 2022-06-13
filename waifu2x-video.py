@@ -24,6 +24,8 @@ config_ini = configparser.ConfigParser()
 config_ini.read('w2xv_data/config.ini', encoding = 'utf-8')
 
 waifu2x_cui_path = config_ini['DEFAULT']['waifu2x_path']
+final_enc_cmd = config_ini['DEFAULT']['final_cmd']
+tmp_folder_chk = int(config_ini['DEFAULT']['tmp_folder'])
 
 sg.LOOK_AND_FEEL_TABLE['white'] = {
     'BACKGROUND': '#ffffff',
@@ -39,9 +41,6 @@ sg.LOOK_AND_FEEL_TABLE['white'] = {
 }
 
 sg.theme('white')
-
-with open('w2xv_data/lists/ffmpeg_codecs.txt') as fm_codecs:
-    ffmpeg_codec_list = fm_codecs.read().splitlines()
 
 with open('w2xv_data/lists/ffmpeg_formats.txt') as fm_formats:
     img_format_list = fm_formats.read().splitlines()
@@ -62,9 +61,8 @@ waifu2x_model_dict = {
 def disabled_object(sw_disabled):
     #crap code :(
     main_window['-ffmpeg_presets_combo-'].update(disabled = sw_disabled)
-    main_window['-ffmpeg_codecs_combo-'].update(disabled = sw_disabled)
+    #main_window['-ffmpeg_codecs_combo-'].update(disabled = sw_disabled)
     main_window['-img_format_combo-'].update(disabled = sw_disabled)
-    main_window['-ffmpeg_codecs_combo-'].update(disabled = sw_disabled)
     main_window['-ffmpeg_bitrate-'].update(disabled = sw_disabled)
     main_window['-inputfile_path-'].update(disabled = sw_disabled)
     main_window['-input_browse_button-'].update(disabled = sw_disabled)
@@ -96,6 +94,7 @@ def convert_long_task():
 
     global current_step
     global task_cancel_flag
+    global final_enc_cmd
 
     if main_values['-audio_copy_checkbox-'] == True:
         current_step += 1
@@ -103,18 +102,25 @@ def convert_long_task():
 
         fmac_cmd = ['ffmpeg', '-y', '-i', input_video_path, '-vn', current_path + '\w2xv_tmp\\audio_tmp.mp3']
 
-        fmac = fmpg(fmac_cmd)
-        for fmac_progress in fmac.run_command_with_progress():
-            main_window['-status_text-'].update(value = 'Step ' + str(current_step) + '/' + pg_step_max + ': Audio extraction' + task_cancel_msg)
-            main_window['-pb-'].update(current_count = fmac_progress)
-            main_window.refresh()
+        try:
+            fmac = fmpg(fmac_cmd)
+            for fmac_progress in fmac.run_command_with_progress():
+                main_window['-status_text-'].update(value = 'Step ' + str(current_step) + '/' + pg_step_max + ': Audio extraction' + task_cancel_msg)
+                main_window['-pb-'].update(current_count = fmac_progress)
+                main_window.refresh()
+        except:
+            main_window['-status_text-'].update(value = 'ffmpeg ERROR: 無効なコマンドです')
+            main_window['-pb-'].update(current_count = 0, max = 100)
+            if tmp_folder_chk == 0: shutil.rmtree(current_path + '\w2xv_tmp')
+            disabled_object(False)
+            return
 
         time.sleep(1)
 
     if task_cancel_flag == 1:
         main_window['-status_text-'].update(value = 'on Standby...')
         main_window['-pb-'].update(current_count = 0, max = 100)
-        shutil.rmtree(current_path + '\w2xv_tmp')
+        if tmp_folder_chk == 0: shutil.rmtree(current_path + '\w2xv_tmp')
         disabled_object(False)
         return
 
@@ -123,17 +129,24 @@ def convert_long_task():
 
     fmis_cmd = ['ffmpeg', '-y', '-i', input_video_path, '-r', str(video_info_fps), current_path + '\w2xv_tmp\\img_sequence\\img_tmp_%05d.' + img_format]
 
-    fmis = fmpg(fmis_cmd)
-    for fmis_progress in fmis.run_command_with_progress():
-        main_window['-status_text-'].update(value = 'Step ' + str(current_step) + '/' + pg_step_max + ': Dismantle to image sequence' + task_cancel_msg)
-        main_window['-pb-'].update(current_count = fmis_progress)
-        main_window.refresh()
+    try:
+        fmis = fmpg(fmis_cmd)
+        for fmis_progress in fmis.run_command_with_progress():
+            main_window['-status_text-'].update(value = 'Step ' + str(current_step) + '/' + pg_step_max + ': Dismantle to image sequence' + task_cancel_msg)
+            main_window['-pb-'].update(current_count = fmis_progress)
+            main_window.refresh()
+    except:
+        main_window['-status_text-'].update(value = 'ffmpeg ERROR: 無効なコマンドです')
+        main_window['-pb-'].update(current_count = 0, max = 100)
+        if tmp_folder_chk == 0: shutil.rmtree(current_path + '\w2xv_tmp')
+        disabled_object(False)
+        return
 
     if task_cancel_flag == 1:
         main_window['-status_text-'].update(value = 'on Standby...')
         main_window['-pb-'].update(current_count = 0, max = 100)
+        if tmp_folder_chk == 0: shutil.rmtree(current_path + '\w2xv_tmp')
         disabled_object(False)
-        shutil.rmtree(current_path + '\w2xv_tmp')
         return
 
     imgs_files_sum = int(sum(os.path.isfile(os.path.join(current_path + '\\w2xv_tmp\\img_sequence', name)) for name in os.listdir(current_path + '\\w2xv_tmp\\img_sequence')))
@@ -141,31 +154,42 @@ def convert_long_task():
     main_window['-pb-'].update(current_count = 0, max = imgs_files_sum)
     current_step += 1
 
-    for cnt in range(imgs_files_sum):
+    main_window['-status_text-'].update(value = 'Step ' + str(current_step) + '/' + pg_step_max + ': Waifu2x up convert... ' + str(cnt) + '/' + str(imgs_files_sum))
+    main_window['-pb-'].update(current_count = cnt)
+
+    cnw_code = 0x08000000
+    waifu2x_res = subprocess.Popen([waifu2x_cui_path,
+                                '-i', str(current_path + '\w2xv_tmp\\img_sequence'),
+                                '-o', str(current_path + '\w2xv_tmp\\img_sequence_us'),
+                                '-e', str(img_format),
+                                '-m', str(convert_mode),
+                                '-n', str(noise_level),
+                                '-w', str(scale_level_w),
+                                '-h', str(scale_level_h),
+                                '-p', str(proseccor_mode),
+                                '-c', str(waifu2x_separate),
+                                '-y', str(waifu2x_model),
+                                '-b', str(waifu2x_batch),
+                                '-t', str(tta_mode)], shell = False, creationflags = cnw_code)
+
+    while True:
+        usimgs_files_sum = int(sum(os.path.isfile(os.path.join(current_path + '\\w2xv_tmp\\img_sequence_us', name)) for name in os.listdir(current_path + '\\w2xv_tmp\\img_sequence_us')))
+
+        main_window['-status_text-'].update(value = 'Step ' + str(current_step) + '/' + pg_step_max + ': Waifu2x up convert... ' + str(usimgs_files_sum) + '/' + str(imgs_files_sum))
+        main_window['-pb-'].update(current_count = usimgs_files_sum)
+
+        if usimgs_files_sum == imgs_files_sum:
+            break
 
         if task_cancel_flag == 1:
             main_window['-status_text-'].update(value = 'on Standby...')
             main_window['-pb-'].update(current_count = 0, max = 100)
-            shutil.rmtree(current_path + '\w2xv_tmp')
+            if tmp_folder_chk == 0: shutil.rmtree(current_path + '\w2xv_tmp')
+            waifu2x_res.kill()
             disabled_object(False)
             break
 
-        main_window['-status_text-'].update(value = 'Step ' + str(current_step) + '/' + pg_step_max + ': Waifu2x up convert... ' + str(cnt) + '/' + str(imgs_files_sum))
-        main_window['-pb-'].update(current_count = cnt)
-
-        waifu2x_res = subprocess.run([waifu2x_cui_path,
-                                    '-i', str(current_path + '\w2xv_tmp\\img_sequence\\img_tmp_' + str(cnt).zfill(5) + '.' + img_format),
-                                    '-o', str(current_path + '\w2xv_tmp\\img_sequence_us\\img_tmp_' + str(cnt).zfill(5) + '.' + img_format),
-                                    '-m', str(convert_mode),
-                                    '-n', str(noise_level),
-                                    '-w', str(scale_level_w),
-                                    '-h', str(scale_level_h),
-                                    '-p', str(proseccor_mode),
-                                    '-c', str(waifu2x_separate),
-                                    '-y', str(waifu2x_model),
-                                    '-b', str(waifu2x_batch),
-                                    '-t', str(tta_mode)], shell = True, capture_output = True)
-
+        time.sleep(3)
         main_window.refresh()
 
     if task_cancel_flag == 1: return
@@ -174,22 +198,47 @@ def convert_long_task():
     main_window['-status_text-'].update(value = 'Step ' + str(current_step) + '/' + pg_step_max + ': Converting to video' + task_cancel_msg)
     main_window['-pb-'].update(current_count = 0, max = 100)
 
-    if main_values['-crf_checkbox-'] == True:
-        if main_values['-audio_copy_checkbox-'] == True:
-            fmcv_cmd = ['ffmpeg', '-y', '-r', str(video_info_fps), '-i', current_path + '\w2xv_tmp\\img_sequence_us\\img_tmp_%05d.' + img_format, '-i', current_path + '\w2xv_tmp\\audio_tmp.mp3', '-vcodec', str(ffmpeg_codec), '-crf', str(ffmpeg_crf), '-pix_fmt', 'yuv420p', '-preset', str(ffmpeg_preset), '-r', str(video_info_fps), str(output_video_path)]
-        else:
-            fmcv_cmd = ['ffmpeg', '-y', '-r', str(video_info_fps), '-i', current_path + '\w2xv_tmp\\img_sequence_us\\img_tmp_%05d.' + img_format, '-vcodec', str(ffmpeg_codec), '-crf', str(ffmpeg_crf), '-pix_fmt', 'yuv420p', '-preset', str(ffmpeg_preset), '-r', str(video_info_fps), str(output_video_path)]
-    else:
-        if main_values['-audio_copy_checkbox-'] == True:
-            fmcv_cmd = ['ffmpeg', '-y', '-r', str(video_info_fps), '-i', current_path + '\w2xv_tmp\\img_sequence_us\\img_tmp_%05d.' + img_format, '-i', current_path + '\w2xv_tmp\\audio_tmp.mp3', '-vcodec', str(ffmpeg_codec), '-b:v', str(ffmpeg_bitrate), '-pix_fmt', 'yuv420p', '-preset', str(ffmpeg_preset), '-r', str(video_info_fps), str(output_video_path)]
-        else:
-            fmcv_cmd = ['ffmpeg', '-y', '-r', str(video_info_fps), '-i', current_path + '\w2xv_tmp\\img_sequence_us\\img_tmp_%05d.' + img_format, '-vcodec', str(ffmpeg_codec), '-b:v', str(ffmpeg_bitrate), '-pix_fmt', 'yuv420p', '-preset', str(ffmpeg_preset), '-r', str(video_info_fps), str(output_video_path)]
+    final_enc_cmd_task = final_enc_cmd
 
-    fmcv = fmpg(fmcv_cmd)
-    for fmcv_progress in fmcv.run_command_with_progress():
-        main_window['-status_text-'].update(value = 'Step ' + str(current_step) + '/' + pg_step_max + ': Converting to video' + task_cancel_msg)
-        main_window['-pb-'].update(current_count = fmcv_progress)
-        main_window.refresh()
+    if final_enc_cmd_task == '':
+
+        if main_values['-crf_checkbox-'] == True:
+            if main_values['-audio_copy_checkbox-'] == True:
+                fmcv_cmd = ['ffmpeg', '-y', '-r', str(video_info_fps), '-i', current_path + '\w2xv_tmp\\img_sequence_us\\img_tmp_%05d.' + img_format, '-i', current_path + '\w2xv_tmp\\audio_tmp.mp3', '-vcodec', str(ffmpeg_codec), '-crf', str(ffmpeg_crf), '-pix_fmt', 'yuv420p', '-preset', str(ffmpeg_preset), '-r', str(video_info_fps), str(output_video_path)]
+            else:
+                fmcv_cmd = ['ffmpeg', '-y', '-r', str(video_info_fps), '-i', current_path + '\w2xv_tmp\\img_sequence_us\\img_tmp_%05d.' + img_format, '-vcodec', str(ffmpeg_codec), '-crf', str(ffmpeg_crf), '-pix_fmt', 'yuv420p', '-preset', str(ffmpeg_preset), '-r', str(video_info_fps), str(output_video_path)]
+        else:
+            if main_values['-audio_copy_checkbox-'] == True:
+                fmcv_cmd = ['ffmpeg', '-y', '-r', str(video_info_fps), '-i', current_path + '\w2xv_tmp\\img_sequence_us\\img_tmp_%05d.' + img_format, '-i', current_path + '\w2xv_tmp\\audio_tmp.mp3', '-vcodec', str(ffmpeg_codec), '-b:v', str(ffmpeg_bitrate), '-pix_fmt', 'yuv420p', '-preset', str(ffmpeg_preset), '-r', str(video_info_fps), str(output_video_path)]
+            else:
+                fmcv_cmd = ['ffmpeg', '-y', '-r', str(video_info_fps), '-i', current_path + '\w2xv_tmp\\img_sequence_us\\img_tmp_%05d.' + img_format, '-vcodec', str(ffmpeg_codec), '-b:v', str(ffmpeg_bitrate), '-pix_fmt', 'yuv420p', '-preset', str(ffmpeg_preset), '-r', str(video_info_fps), str(output_video_path)]
+
+    else:
+
+        final_enc_cmd_task += ' ' + str(output_video_path)
+
+        if main_values['-crf_checkbox-'] == True and os.path.exists(current_path + '\w2xv_tmp\\audio_tmp.mp3') == True:
+            final_enc_cmd_task = 'ffmpeg -y ' + (final_enc_cmd_task.replace('{input_path}', current_path + '\w2xv_tmp\\img_sequence_us\\img_tmp_%05d.' + img_format).replace('{audio_path}', current_path + '\w2xv_tmp\\audio_tmp.mp3').replace('{fps}', str(video_info_fps)))
+
+        else:
+
+            final_enc_cmd_task = final_enc_cmd_task.replace('-i {audio_path}', '').replace('{audio_path}', '')
+            final_enc_cmd_task = 'ffmpeg -y ' + (final_enc_cmd_task.replace('{input_path}', current_path + '\w2xv_tmp\\img_sequence_us\\img_tmp_%05d.' + img_format).replace('{fps}', str(video_info_fps)))
+
+        fmcv_cmd = final_enc_cmd_task.split()
+
+    try:
+        fmcv = fmpg(fmcv_cmd)
+        for fmcv_progress in fmcv.run_command_with_progress():
+            main_window['-status_text-'].update(value = 'Step ' + str(current_step) + '/' + pg_step_max + ': Converting to video' + task_cancel_msg)
+            main_window['-pb-'].update(current_count = fmcv_progress)
+            main_window.refresh()
+    except:
+        main_window['-status_text-'].update(value = 'ffmpeg ERROR: 無効なコマンドです')
+        main_window['-pb-'].update(current_count = 0, max = 100)
+        if tmp_folder_chk == 0: shutil.rmtree(current_path + '\w2xv_tmp')
+        disabled_object(False)
+        return
 
     main_window.write_event_value('-endtask-', 'DONE')
 
@@ -197,7 +246,7 @@ def convert_long_task():
 
 
 
-main_window = window_layout.lo_main_window(sg, window_title, icon_path, ffmpeg_preset_list, ffmpeg_codec_list, img_format_list, waifu2x_model_list, separate_list)
+main_window = window_layout.lo_main_window(sg, window_title, icon_path, ffmpeg_preset_list, img_format_list, waifu2x_model_list, separate_list)
 
 while True:
     main_event, main_values = main_window.read()
@@ -206,7 +255,7 @@ while True:
         break
 
     if main_event == '-open_setting_button-':
-        setting_window = window_layout.lo_setting_window(sg, window_title, icon_path, waifu2x_cui_path)
+        setting_window = window_layout.lo_setting_window(sg, window_title, icon_path, waifu2x_cui_path, final_enc_cmd, tmp_folder_chk)
 
         while True:
             setting_event, setting_values = setting_window.read()
@@ -216,7 +265,11 @@ while True:
 
             if setting_event == '-setting_ok_button-':
                 config_ini['DEFAULT']['waifu2x_path'] = setting_values['-w2x_path-']
+                config_ini['DEFAULT']['final_cmd'] = setting_values['-final_enc_cmd-']
+                config_ini['DEFAULT']['tmp_folder'] = str(int(setting_values['-tmp_checkbox-']))
                 waifu2x_cui_path = setting_values['-w2x_path-']
+                final_enc_cmd = setting_values['-final_enc_cmd-']
+                tmp_folder_chk = int(setting_values['-tmp_checkbox-'])
 
                 with open('w2xv_data/config.ini', 'w', encoding = 'utf-8') as cf_file:
                     config_ini.write(cf_file)
@@ -232,7 +285,7 @@ while True:
     if main_event == '-endtask-':
         main_window['-status_text-'].update(value = 'on Standby...')
         main_window['-pb-'].update(current_count = 0, max = 100)
-        shutil.rmtree(current_path + '\w2xv_tmp')
+        if tmp_folder_chk == 0: shutil.rmtree(current_path + '\w2xv_tmp')
         disabled_object(False)
 
     if main_event == '-start_button-':
@@ -240,6 +293,9 @@ while True:
         if os.path.exists(waifu2x_cui_path) == True:
 
             if main_values['-inputfile_path-'] != '' and main_values['-outputfile_path-'] != '':
+
+                if os.path.exists(current_path + '\w2xv_tmp') == True:
+                    shutil.rmtree(current_path + '\w2xv_tmp')
 
                 os.mkdir(current_path + '\w2xv_tmp')
                 os.mkdir(current_path + '\w2xv_tmp\img_sequence')
@@ -251,7 +307,7 @@ while True:
 
                 img_format = main_values['-img_format_combo-']
                 ffmpeg_preset = main_values['-ffmpeg_presets_combo-']
-                ffmpeg_codec = main_values['-ffmpeg_codecs_combo-']
+                ffmpeg_codec = 'libx264'
                 ffmpeg_crf = main_values['-crf_spin-']
                 ffmpeg_bitrate = main_values['-ffmpeg_bitrate-']
 

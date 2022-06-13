@@ -1,16 +1,14 @@
-def lo_main_window(sg, window_title, icon_path, ffmpeg_preset_list, ffmpeg_codec_list, img_format_list, waifu2x_model_list, separate_list):
+def lo_main_window(sg, window_title, icon_path, ffmpeg_preset_list, img_format_list, waifu2x_model_list, separate_list):
 
         ffmpeg_presets = [[sg.Combo(ffmpeg_preset_list, ffmpeg_preset_list[5], font = ['Meiryo',8], size = (10,1), readonly = True, key = '-ffmpeg_presets_combo-')]]
 
-        ffmpeg_codecs = [[sg.Combo(ffmpeg_codec_list, ffmpeg_codec_list[0], font = ['Meiryo',8], size = (10,1), readonly = True, key = '-ffmpeg_codecs_combo-')]]
+        #ffmpeg_codecs = [[sg.Combo(ffmpeg_codec_list, ffmpeg_codec_list[0], font = ['Meiryo',8], size = (10,1), readonly = True, key = '-ffmpeg_codecs_combo-')]]
 
         img_formats = [[sg.Combo(img_format_list, img_format_list[1], font = ['Meiryo',8], size = (10,1), readonly = True, key = '-img_format_combo-')]]
 
         ffmpeg_bitrate = [[sg.Input('30000000', font = ['Meiryo',8], size = (20,1), key = '-ffmpeg_bitrate-'), sg.Text(text = 'bps', font = ['Meiryo',8])]]
 
         #ffmpeg_pass = [[sg.Combo(['1', '2'], '1', font = ['Meiryo',8], size = (6,1), readonly = True, key = '-ffmpeg_pass_combo-')]]
-
-        ffmpeg_codecs = [[sg.Combo(ffmpeg_codec_list, ffmpeg_codec_list[0], font = ['Meiryo',8], size = (10,1), readonly = True, key = '-ffmpeg_codecs_combo-')]]
 
         crf_set = [[sg.Spin([num for num in range(52)], 23, font = ['Meiryo',8], readonly = True, key = '-crf_spin-')]]
 
@@ -23,8 +21,8 @@ def lo_main_window(sg, window_title, icon_path, ffmpeg_preset_list, ffmpeg_codec
                         [sg.Frame('出力プリセット', ffmpeg_presets, font = ['Meiryo',8], border_width = 1, pad = ((10,0),(0,10))), sg.Frame('crf', crf_set, font = ['Meiryo',8], pad = ((10,0),(0,10)), border_width = 1),
                          sg.Checkbox(text = 'crfを使用する', default = True, font = ['Meiryo',8], pad = ((10,0),(7,0)), key = '-crf_checkbox-'),
                          sg.Checkbox(text = '音声もコピー', default = True, font = ['Meiryo',8], pad = ((10,0),(7,0)), key = '-audio_copy_checkbox-'),
-                         sg.Frame('コーデック', ffmpeg_codecs, font = ['Meiryo',8], border_width = 1, pad = ((10,0),(0,10))), sg.Frame('画像フォーマット', img_formats, font = ['Meiryo',8], border_width = 1, pad = ((10,0),(0,10))),
-                         sg.Frame('ビットレート', ffmpeg_bitrate, font = ['Meiryo',8], border_width = 1, pad = ((10,0),(0,10)))]]
+                         sg.Frame('画像フォーマット', img_formats, font = ['Meiryo',8], border_width = 1, pad = ((10,0),(0,10))),
+                         sg.Frame('ビットレート', ffmpeg_bitrate, font = ['Meiryo',8], border_width = 1, pad = ((10,0),(0,10))), sg.Text(text = 'コーデック: h264(libx264)', font = ['Meiryo',8], pad = ((30,0),(0,0)))]]
 
         convert_mode = [[sg.Radio('拡大', 'convert_mode_grp', default = True, font = ['Meiryo',8], key = '-cm_00_radio-')], [sg.Radio('ノイズ除去と拡大', 'convert_mode_grp', default = False, font = ['Meiryo',8], key = '-cm_01_radio-')],
                         [sg.Radio('ノイズ除去(自動判別)と拡大', 'convert_mode_grp', default = False, font = ['Meiryo',8], key = '-cm_02_radio-')],
@@ -58,11 +56,14 @@ def lo_main_window(sg, window_title, icon_path, ffmpeg_preset_list, ffmpeg_codec
 
         return sg.Window(window_title, main_layout, icon = icon_path, size = (900,430), font = ['Meiryo',12])
 
-def lo_setting_window(sg, window_title, icon_path, waifu2x_cui_path):
+def lo_setting_window(sg, window_title, icon_path, waifu2x_cui_path, final_enc_cmd, tmp_folder_chk):
 
-        setting_layout = [[sg.Text(text = 'waifu2x-caffe-cuiの場所', font = ['Meiryo',8], pad = ((10,0),(10,0))), sg.Input(waifu2x_cui_path, font = ['Meiryo',8], size = (70,1), pad = ((20,0),(10,0)), key = '-w2x_path-'),
-                           sg.FileBrowse(button_text = '参照', target = "-w2x_path-", file_types=(("waifu2x-caffe-cui", "*.exe"),), font = ['Meiryo',8], size = (10,1), pad = ((20,10),(10,0)), key = '-w2x_browse_button-')],
+        setting_layout = [[sg.Text(text = 'waifu2x-caffe-cuiの場所', font = ['Meiryo',8], pad = ((0,0),(10,0))), sg.Input(waifu2x_cui_path, font = ['Meiryo',8], size = (70,1), pad = ((20,0),(10,0)), key = '-w2x_path-'),
+                           sg.FileBrowse(button_text = '参照', target = "-w2x_path-", file_types=(("waifu2x-caffe-cui", "*.exe"),), font = ['Meiryo',8], size = (10,1), pad = ((20,0),(10,0)), key = '-w2x_browse_button-')],
+                          [sg.Text(text = '最終書き出し用コマンド', font = ['Meiryo',8], pad = ((0,0),(10,0))), sg.Input(final_enc_cmd, font = ['Meiryo',8], size = (85,1), pad = ((20,0),(10,0)), key = '-final_enc_cmd-')],
+                          [sg.Text(text = '入力パス: {input_path} 結合用音声ファイルパス: {audio_path} fps値: {fps} 出力先パスは指定しないでください', font = ['Meiryo',8], pad = ((0,0),(10,0)))],
+                          [sg.Checkbox(text = '生成されたテンポラリフォルダを残す', default = tmp_folder_chk, font = ['Meiryo',8], pad = ((10,0),(7,0)), key = '-tmp_checkbox-')],
                           [sg.Button(button_text = 'OK', font = ['Meiryo',8], size = (15,1), pad = ((0,0),(10,0)), key = '-setting_ok_button-'),
                            sg.Button(button_text = 'Cancel', font = ['Meiryo',8], size = (15,1), pad = ((20,0),(10,0)), key = '-setting_cancel_button-')]]
 
-        return sg.Window(window_title + ' - 詳細設定', setting_layout, icon = icon_path, size = (800,100), font = ['Meiryo',12], element_justification = 'c', modal = True)
+        return sg.Window(window_title + ' - 詳細設定', setting_layout, icon = icon_path, size = (800,180), font = ['Meiryo',12], element_justification = 'c', modal = True)
