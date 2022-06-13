@@ -26,7 +26,7 @@ config_ini.read('w2xv_data/config.ini', encoding = 'utf-8')
 waifu2x_cui_path = config_ini['DEFAULT']['waifu2x_path']
 
 sg.LOOK_AND_FEEL_TABLE['white'] = {
-	'BACKGROUND': '#ffffff',
+    'BACKGROUND': '#ffffff',
     'TEXT': 'black',
     'INPUT': '#eeeeee',
     'SCROLL': '#4169e1',
@@ -238,55 +238,58 @@ while True:
 
     if main_event == '-start_button-':
 
-        if main_values['-inputfile_path-'] != '' and main_values['-outputfile_path-'] != '':
+        if os.path.exists(waifu2x_cui_path) == True:
 
-            os.mkdir(current_path + '\w2xv_tmp')
-            os.mkdir(current_path + '\w2xv_tmp\img_sequence')
-            os.mkdir(current_path + '\w2xv_tmp\img_sequence_us')
+            if main_values['-inputfile_path-'] != '' and main_values['-outputfile_path-'] != '':
 
-            disabled_object(True)
+                os.mkdir(current_path + '\w2xv_tmp')
+                os.mkdir(current_path + '\w2xv_tmp\img_sequence')
+                os.mkdir(current_path + '\w2xv_tmp\img_sequence_us')
+                disabled_object(True)
 
-            input_video_path = main_values['-inputfile_path-']
-            output_video_path = main_values['-outputfile_path-']
+                input_video_path = main_values['-inputfile_path-']
+                output_video_path = main_values['-outputfile_path-']
 
-            img_format = main_values['-img_format_combo-']
+                img_format = main_values['-img_format_combo-']
+                ffmpeg_preset = main_values['-ffmpeg_presets_combo-']
+                ffmpeg_codec = main_values['-ffmpeg_codecs_combo-']
+                ffmpeg_crf = main_values['-crf_spin-']
+                ffmpeg_bitrate = main_values['-ffmpeg_bitrate-']
+                ffmpeg_pass = main_values['-ffmpeg_pass_combo-']
 
-            ffmpeg_preset = main_values['-ffmpeg_presets_combo-']
-            ffmpeg_codec = main_values['-ffmpeg_codecs_combo-']
-            ffmpeg_crf = main_values['-crf_spin-']
-            ffmpeg_bitrate = main_values['-ffmpeg_bitrate-']
-            ffmpeg_pass = main_values['-ffmpeg_pass_combo-']
+                for cnt in range(4):
+                    if main_values['-nl_0' + str(cnt) + '_radio-'] == True: noise_level = cnt
 
-            for cnt in range(4):
-                if main_values['-nl_0' + str(cnt) + '_radio-'] == True: noise_level = cnt
+                if main_values['-cm_00_radio-'] == True: convert_mode = 'scale'
+                if main_values['-cm_01_radio-'] == True: convert_mode = 'noise_scale'
+                if main_values['-cm_02_radio-'] == True: convert_mode = 'auto_scale'
 
-            if main_values['-cm_00_radio-'] == True: convert_mode = 'scale'
-            if main_values['-cm_01_radio-'] == True: convert_mode = 'noise_scale'
-            if main_values['-cm_02_radio-'] == True: convert_mode = 'auto_scale'
+                if main_values['-pm_00_radio-'] == True: proseccor_mode = 'cpu'
+                if main_values['-pm_01_radio-'] == True: proseccor_mode = 'gpu'
 
-            if main_values['-pm_00_radio-'] == True: proseccor_mode = 'cpu'
-            if main_values['-pm_01_radio-'] == True: proseccor_mode = 'gpu'
+                waifu2x_model = waifu2x_model_dict[main_values['-model_list_combo-']]
+                waifu2x_separate = main_values['-seperate_list_combo-']
+                waifu2x_batch = main_values['-batch_list_combo-']
 
-            waifu2x_model = waifu2x_model_dict[main_values['-model_list_combo-']]
-            waifu2x_separate = main_values['-seperate_list_combo-']
-            waifu2x_batch = main_values['-batch_list_combo-']
+                scale_level_w = main_values['-scale_w-']
+                scale_level_h = main_values['-scale_h-']
 
-            scale_level_w = main_values['-scale_w-']
-            scale_level_h = main_values['-scale_h-']
+                tta_mode = int(bool(main_values['-tta_checkbox-']))
 
-            tta_mode = int(bool(main_values['-tta_checkbox-']))
+                probe = ffmpeg.probe(input_video_path)
+                video_info = next(s for s in probe['streams'] if s['codec_type'] == 'video')
+                video_info_fps = int(video_info['r_frame_rate'].split('/')[0])
 
-            probe = ffmpeg.probe(input_video_path)
-            video_info = next(s for s in probe['streams'] if s['codec_type'] == 'video')
-            video_info_fps = int(video_info['r_frame_rate'].split('/')[0])
+                current_step = 0
+                task_cancel_flag = 0
+                task_cancel_msg = ''
 
-            current_step = 0
-            task_cancel_flag = 0
-            task_cancel_msg = ''
+                pg_step_max = '4' if main_values['-audio_copy_checkbox-'] == True else '3'
 
-            pg_step_max = '4' if main_values['-audio_copy_checkbox-'] == True else '3'
+                threading.Thread(target = convert_long_task, daemon = True).start()
 
-            threading.Thread(target = convert_long_task, daemon = True).start()
+            else:
+                main_window['-status_text-'].update(value = 'ERROR: 入出力パスを指定してください')
 
         else:
-            sg.popup_ok('入出力パスを指定してください', title = window_title, icon = icon_path, modal = True)
+            main_window['-status_text-'].update(value = 'ERROR: waifu2x-caffe-cui.exe のパスを指定してください')
