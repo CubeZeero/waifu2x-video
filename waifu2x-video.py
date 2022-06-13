@@ -282,8 +282,6 @@ while True:
                 else:
                     video_info_fps = round(int(video_info['r_frame_rate'].split('/')[0])/int(video_info['r_frame_rate'].split('/')[1]), 2)
 
-                time.sleep(60)
-
                 current_step = 0
                 task_cancel_flag = 0
                 task_cancel_msg = ''
