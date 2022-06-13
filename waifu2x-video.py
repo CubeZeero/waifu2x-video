@@ -64,7 +64,6 @@ def disabled_object(sw_disabled):
     main_window['-ffmpeg_presets_combo-'].update(disabled = sw_disabled)
     main_window['-ffmpeg_codecs_combo-'].update(disabled = sw_disabled)
     main_window['-img_format_combo-'].update(disabled = sw_disabled)
-    main_window['-ffmpeg_pass_combo-'].update(disabled = sw_disabled)
     main_window['-ffmpeg_codecs_combo-'].update(disabled = sw_disabled)
     main_window['-ffmpeg_bitrate-'].update(disabled = sw_disabled)
     main_window['-inputfile_path-'].update(disabled = sw_disabled)
@@ -182,9 +181,9 @@ def convert_long_task():
             fmcv_cmd = ['ffmpeg', '-y', '-r', str(video_info_fps), '-i', current_path + '\w2xv_tmp\\img_sequence_us\\img_tmp_%05d.' + img_format, '-vcodec', str(ffmpeg_codec), '-crf', str(ffmpeg_crf), '-pix_fmt', 'yuv420p', '-preset', str(ffmpeg_preset), '-r', str(video_info_fps), str(output_video_path)]
     else:
         if main_values['-audio_copy_checkbox-'] == True:
-            fmcv_cmd = ['ffmpeg', '-y', '-r', str(video_info_fps), '-i', current_path + '\w2xv_tmp\\img_sequence_us\\img_tmp_%05d.' + img_format, '-i', current_path + '\w2xv_tmp\\audio_tmp.mp3', '-vcodec', str(ffmpeg_codec), '-b:v', str(ffmpeg_bitrate), '-pix_fmt', 'yuv420p', '-pass', str(ffmpeg_pass), '-preset', str(ffmpeg_preset), '-r', str(video_info_fps), str(output_video_path)]
+            fmcv_cmd = ['ffmpeg', '-y', '-r', str(video_info_fps), '-i', current_path + '\w2xv_tmp\\img_sequence_us\\img_tmp_%05d.' + img_format, '-i', current_path + '\w2xv_tmp\\audio_tmp.mp3', '-vcodec', str(ffmpeg_codec), '-b:v', str(ffmpeg_bitrate), '-pix_fmt', 'yuv420p', '-preset', str(ffmpeg_preset), '-r', str(video_info_fps), str(output_video_path)]
         else:
-            fmcv_cmd = ['ffmpeg', '-y', '-r', str(video_info_fps), '-i', current_path + '\w2xv_tmp\\img_sequence_us\\img_tmp_%05d.' + img_format, '-vcodec', str(ffmpeg_codec), '-b:v', str(ffmpeg_bitrate), '-pix_fmt', 'yuv420p', '-pass', str(ffmpeg_pass), '-preset', str(ffmpeg_preset), '-r', str(video_info_fps), str(output_video_path)]
+            fmcv_cmd = ['ffmpeg', '-y', '-r', str(video_info_fps), '-i', current_path + '\w2xv_tmp\\img_sequence_us\\img_tmp_%05d.' + img_format, '-vcodec', str(ffmpeg_codec), '-b:v', str(ffmpeg_bitrate), '-pix_fmt', 'yuv420p', '-preset', str(ffmpeg_preset), '-r', str(video_info_fps), str(output_video_path)]
 
     fmcv = fmpg(fmcv_cmd)
     for fmcv_progress in fmcv.run_command_with_progress():
@@ -255,7 +254,6 @@ while True:
                 ffmpeg_codec = main_values['-ffmpeg_codecs_combo-']
                 ffmpeg_crf = main_values['-crf_spin-']
                 ffmpeg_bitrate = main_values['-ffmpeg_bitrate-']
-                ffmpeg_pass = main_values['-ffmpeg_pass_combo-']
 
                 for cnt in range(4):
                     if main_values['-nl_0' + str(cnt) + '_radio-'] == True: noise_level = cnt

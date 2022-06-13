@@ -8,7 +8,7 @@ def lo_main_window(sg, window_title, icon_path, ffmpeg_preset_list, ffmpeg_codec
 
         ffmpeg_bitrate = [[sg.Input('30000000', font = ['Meiryo',8], size = (20,1), key = '-ffmpeg_bitrate-'), sg.Text(text = 'bps', font = ['Meiryo',8])]]
 
-        ffmpeg_pass = [[sg.Combo(['1', '2'], '1', font = ['Meiryo',8], size = (6,1), readonly = True, key = '-ffmpeg_pass_combo-')]]
+        #ffmpeg_pass = [[sg.Combo(['1', '2'], '1', font = ['Meiryo',8], size = (6,1), readonly = True, key = '-ffmpeg_pass_combo-')]]
 
         ffmpeg_codecs = [[sg.Combo(ffmpeg_codec_list, ffmpeg_codec_list[0], font = ['Meiryo',8], size = (10,1), readonly = True, key = '-ffmpeg_codecs_combo-')]]
 
@@ -24,7 +24,7 @@ def lo_main_window(sg, window_title, icon_path, ffmpeg_preset_list, ffmpeg_codec
                          sg.Checkbox(text = 'crfを使用する', default = True, font = ['Meiryo',8], pad = ((10,0),(7,0)), key = '-crf_checkbox-'),
                          sg.Checkbox(text = '音声もコピー', default = True, font = ['Meiryo',8], pad = ((10,0),(7,0)), key = '-audio_copy_checkbox-'),
                          sg.Frame('コーデック', ffmpeg_codecs, font = ['Meiryo',8], border_width = 1, pad = ((10,0),(0,10))), sg.Frame('画像フォーマット', img_formats, font = ['Meiryo',8], border_width = 1, pad = ((10,0),(0,10))),
-                         sg.Frame('ビットレート', ffmpeg_bitrate, font = ['Meiryo',8], border_width = 1, pad = ((10,0),(0,10))), sg.Frame('パス', ffmpeg_pass, font = ['Meiryo',8], border_width = 1, pad = ((10,0),(0,10)))]]
+                         sg.Frame('ビットレート', ffmpeg_bitrate, font = ['Meiryo',8], border_width = 1, pad = ((10,0),(0,10)))]]
 
         convert_mode = [[sg.Radio('拡大', 'convert_mode_grp', default = True, font = ['Meiryo',8], key = '-cm_00_radio-')], [sg.Radio('ノイズ除去と拡大', 'convert_mode_grp', default = False, font = ['Meiryo',8], key = '-cm_01_radio-')],
                         [sg.Radio('ノイズ除去(自動判別)と拡大', 'convert_mode_grp', default = False, font = ['Meiryo',8], key = '-cm_02_radio-')],
