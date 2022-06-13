@@ -17,9 +17,9 @@ ffmpegで連番画像へ解体、連番画像をwaifu2x-caffeでアップコン�
 
 # ダウンロード
 
-最新版 v1.0.1
+最新版 v1.1.0
 
-[https://github.com/CubeZeero/waifu2x-video/releases/tag/v1.0.1](https://github.com/CubeZeero/waifu2x-video/releases/tag/v1.1.0)
+[https://github.com/CubeZeero/waifu2x-video/releases/tag/v1.1.0](https://github.com/CubeZeero/waifu2x-video/releases/tag/v1.1.0)
 
 # 使用方法
 
