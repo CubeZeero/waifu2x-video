@@ -115,6 +115,7 @@ def convert_long_task():
     if task_cancel_flag == 1:
         main_window['-status_text-'].update(value = 'on Standby...')
         main_window['-pb-'].update(current_count = 0, max = 100)
+        shutil.rmtree(current_path + '\w2xv_tmp')
         disabled_object(False)
         return
 
@@ -133,6 +134,7 @@ def convert_long_task():
         main_window['-status_text-'].update(value = 'on Standby...')
         main_window['-pb-'].update(current_count = 0, max = 100)
         disabled_object(False)
+        shutil.rmtree(current_path + '\w2xv_tmp')
         return
 
     imgs_files_sum = int(sum(os.path.isfile(os.path.join(current_path + '\\w2xv_tmp\\img_sequence', name)) for name in os.listdir(current_path + '\\w2xv_tmp\\img_sequence')))
@@ -145,6 +147,7 @@ def convert_long_task():
         if task_cancel_flag == 1:
             main_window['-status_text-'].update(value = 'on Standby...')
             main_window['-pb-'].update(current_count = 0, max = 100)
+            shutil.rmtree(current_path + '\w2xv_tmp')
             disabled_object(False)
             break
 
@@ -237,7 +240,6 @@ while True:
 
         if main_values['-inputfile_path-'] != '' and main_values['-outputfile_path-'] != '':
 
-            shutil.rmtree(current_path + '\w2xv_tmp')
             os.mkdir(current_path + '\w2xv_tmp')
             os.mkdir(current_path + '\w2xv_tmp\img_sequence')
             os.mkdir(current_path + '\w2xv_tmp\img_sequence_us')
