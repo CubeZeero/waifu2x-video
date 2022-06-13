@@ -15,6 +15,12 @@ waifu2x-videoはwaifu2x-caffe([https://github.com/lltcggie/waifu2x-caffe](https:
 
 ffmpegで連番画像へ解体、連番画像をwaifu2x-caffeでアップコンバートしffmpegで動画へ変換するフローを自動で行います。
 
+# ダウンロード
+
+最新版 v1.0.1
+
+[https://github.com/CubeZeero/waifu2x-video/releases/tag/v1.0.1](https://github.com/CubeZeero/waifu2x-video/releases/tag/v1.0.1)
+
 # 使用方法
 
 ffmpegをダウンロードし、パスを通してコマンドプロンプトから利用できるようにします。
