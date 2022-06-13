@@ -276,7 +276,13 @@ while True:
 
                 probe = ffmpeg.probe(input_video_path)
                 video_info = next(s for s in probe['streams'] if s['codec_type'] == 'video')
-                video_info_fps = int(video_info['r_frame_rate'].split('/')[0])
+
+                if int(video_info['r_frame_rate'].split('/')[1]) == 0:
+                    video_info_fps = int(video_info['r_frame_rate'].split('/')[0])
+                else:
+                    video_info_fps = round(int(video_info['r_frame_rate'].split('/')[0])/int(video_info['r_frame_rate'].split('/')[1]), 2)
+
+                time.sleep(60)
 
                 current_step = 0
                 task_cancel_flag = 0
