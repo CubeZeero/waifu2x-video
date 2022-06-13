@@ -19,7 +19,7 @@ ffmpegで連番画像へ解体、連番画像をwaifu2x-caffeでアップコン�
 
 最新版 v1.0.1
 
-[https://github.com/CubeZeero/waifu2x-video/releases/tag/v1.0.1](https://github.com/CubeZeero/waifu2x-video/releases/tag/v1.0.1)
+[https://github.com/CubeZeero/waifu2x-video/releases/tag/v1.0.1](https://github.com/CubeZeero/waifu2x-video/releases/tag/v1.1.0)
 
 # 使用方法
 
@@ -35,7 +35,7 @@ waifu2x-caffeに関する仕様はwaifu2x-caffeの[Readme](https://github.com/ll
 
 ## 出力プリセット
 
-ffmpegの出力プリセットを指定できます。
+libx264の出力プリセットを指定できます。
 
 品質固定モードの場合出来上がる品質は同じですが、速度が速くなるほどファイルサイズは大きくなります。
 
@@ -45,7 +45,7 @@ ffmpegの出力プリセットを指定できます。
 
 ## crf
 
-crf (品質固定モード) を指定できます。
+libx264のcrf (品質固定モード) を指定できます。
 
 小さい値になればなるほど品質は向上しますが、その分ファイルサイズは増幅します。
 
@@ -59,12 +59,6 @@ crf (品質固定モード) を指定できます。
 
 チェックを入れると音声もコピーして結合します。
 
-## コーデック
-
-コーデックを選択できます。
-
-`./w2xv_data/lists/ffmpeg_codecs.txt`を編集することで、項目を追加することもできます。
-
 ## 画像フォーマット
 
 連番解体時、waifu2x-caffeでの拡大時で使用される画像フォーマットを選択できます。
@@ -76,3 +70,33 @@ crf (品質固定モード) を指定できます。
 動画エンコード時のビットレートを指定できます。
 
 `crfを使用する`のチェックを外した場合のみ、この設定が使用されます。
+
+# 詳細設定
+
+## waifu2x-caffe-cui.exeの場所
+
+waifu2x-caffe-cui.exeの場所を指定してください
+
+## 最終書き出し用コマンド
+
+waifu2x-caffeでのアップコンバート後に行うエンコード処理を独自のコマンドで行なえます
+
+以下のコマンドを挿入して作成できます
+
+| コマンド | 説明 | 条件 |
+| ------- | ----------- | ------- | 
+| {input_path} | 入力パス | 必須|
+| {audio_path} | 結合用音声ファイルパス | 必須 |
+| {fps} | fps値 | オプション |
+
+例 (Proresでの書き出し)
+
+    -r {fps} -i {input_path} -i {audio_path} -codec:v prores_ks -r {fps}
+
+出力先パスは指定しないでください
+
+## 生成されたテンポラリフォルダを残す
+
+チェックを入れると生成されたテンポラリフォルダ `./w2xv_tmp` を残します
+
+次回利用時には自動的に削除されます
