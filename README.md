@@ -27,6 +27,8 @@ ffmpegをダウンロードし、パスを通してコマンドプロンプト�
 
 waifu2x-caffeをダウンロードし、詳細設定から`waifu2x-caffe-cui.exe`を指定してください。
 
+[https://github.com/lltcggie/waifu2x-caffe/releases](https://github.com/lltcggie/waifu2x-caffe/releases)
+
 waifu2x-caffeに関する仕様はwaifu2x-caffeの[Readme](https://github.com/lltcggie/waifu2x-caffe/blob/master/README.md)を御覧ください。
 
 ## 入力パス、出力パス
